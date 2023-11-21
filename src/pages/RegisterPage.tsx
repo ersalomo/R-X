@@ -1,7 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const RegisterPage = (props) => {
-  const { children } = props;
+const RegisterPage = () => {
   return (
     <div className="w-full max-w-sm p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
       <form className="space-y-6" action="#">

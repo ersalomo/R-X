@@ -1,4 +1,4 @@
-const BASE_URL = "https://forum-api.dicoding.dev/v1";
+export const BASE_URL = "https://forum-api.dicoding.dev/v1";
 const API_ROUTE = {
   USERS: {
     REGISTER: `${BASE_URL}/register`,
