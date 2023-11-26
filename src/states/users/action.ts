@@ -1,4 +1,6 @@
-import { User } from "../../model/user";
+import api from "../../utils/api";
+import { User, UserLogin, RegisterUser } from "../../model/user";
+import { hideLoading, showLoading } from "react-redux-loading-bar";
 
 export const ActionType = {
   SET_AUTH_USER: "SET_AUTH_USER",
@@ -38,33 +40,39 @@ export function asyncReceiveUsers() {
   };
 }
 
-export function asyncRegisterUser(user: User): void {
+export function asyncRegisterUser(user: RegisterUser): void {
   return async () => {
+    showLoading();
     try {
       await api.register(user);
     } catch (err) {
       alert(err.message);
     }
+    hideLoading();
   };
 }
 
 export function asyncUnsetAuthUser() {
   return async (dispatch) => {
+    showLoading();
     dispatch(unsetAuthUserActionCreator());
     api.putAccessToken("");
+    hideLoading();
   };
 }
 
-export function asyncSetAuthUser({ email, password }) {
+export function asyncSetAuthUser(user: UserLogin) {
   return async (dispatch) => {
+    showLoading();
     try {
-      const token: string = await api.login(email, password);
+      const token: string = await api.login(user);
       api.putAccessToken(token);
       const authUser = await api.getOwnProfile();
       dispatch(setAuthUserActionCreator(authUser));
     } catch (err) {
       alert(err.message);
     }
+    hideLoading();
   };
 }
 

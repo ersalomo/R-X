@@ -72,6 +72,7 @@ export default (() => {
 
     const { status, message } = responseJson;
     if (status !== "success") {
+      console.log("sattus", status);
       throw new Error(message);
     }
 

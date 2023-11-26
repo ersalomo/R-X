@@ -1,9 +1,9 @@
 const Label = (props) => {
-  const { children, htmlFor = "", labelName } = props;
+  const { children, htmlFor = "", labelName, className = "" } = props;
   return (
     <>
-      <label htmlFor={htmlFor} className="sr-only">
-        {labelName}
+      <label htmlFor={htmlFor} className={`sr-only ${className}`}>
+        {children || labelName}dfdf
       </label>
     </>
   );

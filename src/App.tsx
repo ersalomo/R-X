@@ -10,30 +10,29 @@ import LeaderBoardPage from "./pages/LeaderBoardPage";
 import Loading from "./components/Loading";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import asyncPreloadProcess from "./utils/loading/loadingProcess";
+import { asyncPreloadProcess } from "./states/isPreload/action";
 import { useSelector } from "react-redux";
 
 function App() {
   const dispatch = useDispatch();
 
-  const { users, threads } = useSelector((states) => states);
+  const { authUser = null, isPreload = false } = useSelector(
+    (states) => states,
+  );
 
-  const isLoginOrRegister =
-    location.pathname === "/login" || location.pathname === "/register";
+  useEffect(() => {
+    dispatch(asyncPreloadProcess());
+  }, [dispatch]);
 
-  console.log(isLoginOrRegister);
+  if (isPreload) return null;
 
-  // useEffect(() => {
-  //   dispatch(asyncPreloadProcess());
-  // }, [dispatch]);
-
-  if (isLoginOrRegister) {
+  if (authUser === null) {
     return (
       <>
         <Loading />
         <main className="flex justify-center">
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/*" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>
         </main>
@@ -46,22 +45,23 @@ function App() {
    * dengan nilai Route di bawah
    */
   return (
-    <div
-      className="flex justify-center"
-      style={{ background: "linear-gradient(45deg, #3498db, #e74c3c)" }}
-    >
-      {/* {alert(isLoginOrRegister)} */}
-      {/* <div className="w-screen max-w-[50%]"> */}
-      <div className="w-screen md:w-full lg:max-w-[50%]">
-        <Routes>
-          <Route path="/" element={<ListDiscussionPage />} />
-          <Route path="/me" element={<UserProfilePage />} />
-          <Route path="/create" element={<CreateDiscussionPage />} />
-          <Route path="/leaderboard" element={<LeaderBoardPage />} />
-        </Routes>
-        <BottomNavigation />
+    <>
+      <Loading />
+      <div
+        className="flex justify-center"
+        style={{ background: "linear-gradient(45deg, #3498db, #e74c3c)" }}
+      >
+        <div className="w-screen md:w-full lg:max-w-[50%]">
+          <Routes>
+            <Route path="/" element={<ListDiscussionPage />} />
+            <Route path="/me" element={<UserProfilePage />} />
+            <Route path="/create" element={<CreateDiscussionPage />} />
+            <Route path="/leaderboard" element={<LeaderBoardPage />} />
+          </Routes>
+          <BottomNavigation />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
