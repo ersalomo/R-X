@@ -1,11 +1,20 @@
-const Label = (props) => {
-  const { children, htmlFor = "", labelName, className = "" } = props;
+import React from "react";
+
+interface LabelProps {
+  children?: React.ReactNode;
+  htmlFor?: string;
+  className?: string;
+}
+
+const Label: React.FC<LabelProps> = ({
+  children,
+  htmlFor = "",
+  className = "",
+}) => {
   return (
-    <>
-      <label htmlFor={htmlFor} className={`sr-only ${className}`}>
-        {children || labelName}dfdf
-      </label>
-    </>
+    <label htmlFor={htmlFor} className={` ${className}`}>
+      {children}
+    </label>
   );
 };
 

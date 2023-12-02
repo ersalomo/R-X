@@ -1,10 +1,9 @@
+/* eslint no-empty: ["error", { "allowEmptyCatch": true }] */
 import api from "../../utils/api";
-import { User, UserLogin, RegisterUser } from "../../model/user";
+import { RegisterUser } from "../../model/user";
 import { hideLoading, showLoading } from "react-redux-loading-bar";
 
 export const ActionType = {
-  SET_AUTH_USER: "SET_AUTH_USER",
-  UNSET_AUTH_USER: "UNSET_AUTH_USER",
   RECEIVE_USERS: "RECEIVE_USERS",
 };
 
@@ -15,74 +14,21 @@ export function receiveUsersActionCreator(users = []) {
   };
 }
 
-export function setAuthUserActionCreator(authUser) {
-  return {
-    type: ActionType.SET_AUTH_USER,
-    payload: {
-      authUser,
-    },
-  };
-}
-
-export function unsetAuthUserActionCreator() {
-  return {
-    type: ActionType.UNSET_AUTH_USER,
-    payload: {
-      authUser: null,
-    },
-  };
-}
-
 export function asyncReceiveUsers() {
   return async (dispatch) => {
-    const users = await getAllUsers();
+    dispatch(showLoading());
+    const users = await api.getAllUsers();
     dispatch(receiveUsersActionCreator(users));
+    dispatch(hideLoading());
   };
 }
 
-export function asyncRegisterUser(user: RegisterUser): void {
-  return async () => {
-    showLoading();
+export function asyncRegisterUser(user: RegisterUser) {
+  return async (dispatch) => {
+    dispatch(showLoading());
     try {
       await api.register(user);
-    } catch (err) {
-      alert(err.message);
-    }
-    hideLoading();
+    } catch (err) {}
+    dispatch(hideLoading());
   };
 }
-
-export function asyncUnsetAuthUser() {
-  return async (dispatch) => {
-    showLoading();
-    dispatch(unsetAuthUserActionCreator());
-    api.putAccessToken("");
-    hideLoading();
-  };
-}
-
-export function asyncSetAuthUser(user: UserLogin) {
-  return async (dispatch) => {
-    showLoading();
-    try {
-      const token: string = await api.login(user);
-      api.putAccessToken(token);
-      const authUser = await api.getOwnProfile();
-      dispatch(setAuthUserActionCreator(authUser));
-    } catch (err) {
-      alert(err.message);
-    }
-    hideLoading();
-  };
-}
-
-// function TodoList() {
-//   const todos = useSelector((states) => states.todos);
-//   const dispatch = useDispatch();
-
-//   useEffect(() => {
-//     dispatch(asyncReceiveTodos());
-//   }, [dispatch]);
-
-//   // ... another component code
-// }

@@ -1,7 +1,26 @@
 import { ThreadRequest } from "../model/thread";
-import { CommentReq, CommentRes } from "../model/comment";
+import { CommentReq, CommentRes, VoteCommentReq } from "../model/comment";
 import { RegisterUser, UserLogin } from "../model/user";
 import { BASE_URL } from "./ApiRoute";
+import toast from "react-hot-toast";
+
+export type VoteType = -1 | 1 | 0;
+
+export const voteTypeValue: Record<string, VoteType> = {
+  neutralVote: 0,
+  upVote: 1,
+  downVote: -1,
+};
+
+export const errorNotify = (msg: string) =>
+  toast(msg, {
+    duration: 2000,
+  });
+
+export const successNotify = (msg: string) =>
+  toast.success(msg, {
+    duration: 2000,
+  });
 
 export default (() => {
   async function _fetchWithAuth(url: string, options = {}) {
@@ -37,8 +56,11 @@ export default (() => {
     const { status, message } = responseJson;
 
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
+    successNotify("Your account registered");
+
     const {
       data: { user },
     } = responseJson;
@@ -57,8 +79,10 @@ export default (() => {
     const { status, message } = responseJson;
 
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
+    successNotify("Success login");
     const {
       data: { token },
     } = responseJson;
@@ -67,14 +91,9 @@ export default (() => {
 
   async function getOwnProfile() {
     const res = await _fetchWithAuth(`${BASE_URL}/users/me`);
-
     const responseJson = await res.json();
-
     const { status, message } = responseJson;
-    if (status !== "success") {
-      console.log("sattus", status);
-      throw new Error(message);
-    }
+    if (status !== "success") throw new Error(message);
 
     const {
       data: { user },
@@ -91,17 +110,12 @@ export default (() => {
     if (status !== "success") {
       throw new Error(message);
     }
-
     const {
       data: { users },
     } = responseJson;
 
     return users;
   }
-
-  /*
-   * threads
-   * */
 
   async function createThread(threadReq: ThreadRequest) {
     const response = await _fetchWithAuth(`${BASE_URL}/threads`, {
@@ -116,13 +130,13 @@ export default (() => {
 
     const { status, message } = responseJson;
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
-
+    successNotify("Thread created successfully");
     const {
       data: { thread },
     } = responseJson;
-
     return thread;
   }
 
@@ -142,14 +156,13 @@ export default (() => {
   }
 
   async function getDetailThread(id: string) {
-    const response = await fetch(`${BASE_URL}/${id}`);
+    const response = await fetch(`${BASE_URL}/threads/${id}`);
     const responseJson = await response.json();
     const { status, message } = responseJson;
 
     if (status !== "success") {
       throw new Error(message);
     }
-
     const {
       data: { detailThread },
     } = responseJson;
@@ -158,19 +171,16 @@ export default (() => {
   }
 
   // comments
-  async function createComment(
-    threadId: string,
-    commentReq: CommentReq,
-  ): Promise<CommentRes> {
+  async function createComment(commentReq: CommentReq): Promise<CommentRes> {
     const response = await _fetchWithAuth(
-      `${BASE_URL}/threads/${threadId}/comments`,
+      `${BASE_URL}/threads/${commentReq.threadId}/comments`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getAccessToken()}`,
         },
-        body: JSON.stringify(commentReq),
+        body: JSON.stringify({ content: commentReq.content }),
       },
     );
 
@@ -179,8 +189,10 @@ export default (() => {
     const { status, message } = responseJson;
 
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
+    successNotify("New comment created successfully");
 
     const {
       data: { comment },
@@ -193,50 +205,30 @@ export default (() => {
   // end comments
   // votes
 
-  async function upVote(threadId: string) {
-    const response = await _fetchWithAuth(
-      `${BASE_URL}/threads/${threadId}/up-vote`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
+  async function voteThread(threadId: string, voteType: VoteType) {
+    const voteTypeUrl: Record<VoteType, string> = {
+      "0": `${BASE_URL}/threads/${threadId}/neutral-vote`, //netral
+      "-1": `${BASE_URL}/threads/${threadId}/down-vote`, //down-vote
+      "1": `${BASE_URL}/threads/${threadId}/up-vote`, //up-vote
+    };
+
+    const response = await _fetchWithAuth(voteTypeUrl[voteType], {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAccessToken()}`,
       },
-    );
+    });
 
     const responseJson = await response.json();
 
     const { status, message } = responseJson;
 
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
-    const {
-      data: { vote },
-    } = responseJson;
-
-    return vote;
-  }
-  async function downVote(threadId: string) {
-    const response = await _fetchWithAuth(
-      `${BASE_URL}/threads/${threadId}/down-vote`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
-      },
-    );
-
-    const responseJson = await response.json();
-
-    const { status, message } = responseJson;
-
-    if (status !== "success") {
-      throw new Error(message);
-    }
+    successNotify("Thread is voted");
     const {
       data: { vote },
     } = responseJson;
@@ -244,25 +236,112 @@ export default (() => {
     return vote;
   }
 
-  async function neutralVote(threadId: string) {
-    const response = await _fetchWithAuth(
-      `${BASE_URL}/threads/${threadId}/neutral-vote`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
+  // async function upVote(threadId: string, voteType: VoteType) {
+  //   const voteTypeUrl: Record<VoteType, string> = {
+  //     "0": `${BASE_URL}/threads/${threadId}/neutral-vote`, //netral
+  //     "-1": `${BASE_URL}/threads/${threadId}/down-vote`, //down-vote
+  //     "1": `${BASE_URL}/threads/${threadId}/up-vote`, //up-vote
+  //   };
+
+  //   const response = await _fetchWithAuth(
+  //     `${BASE_URL}/threads/${threadId}/up-vote`,
+  //     {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${getAccessToken()}`,
+  //       },
+  //     },
+  //   );
+
+  //   const responseJson = await response.json();
+
+  //   const { status, message } = responseJson;
+
+  //   if (status !== "success") {
+  //     throw new Error(message);
+  //   }
+  //   const {
+  //     data: { vote },
+  //   } = responseJson;
+
+  //   return vote;
+  // }
+  // async function downVote(threadId: string) {
+  //   const response = await _fetchWithAuth(
+  //     `${BASE_URL}/threads/${threadId}/down-vote`,
+  //     {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${getAccessToken()}`,
+  //       },
+  //     },
+  //   );
+
+  //   const responseJson = await response.json();
+
+  //   const { status, message } = responseJson;
+
+  //   if (status !== "success") {
+  //     throw new Error(message);
+  //   }
+  //   const {
+  //     data: { vote },
+  //   } = responseJson;
+
+  //   return vote;
+  // }
+  // async function neutralVote(threadId: string) {
+  //   const response = await _fetchWithAuth(
+  //     `${BASE_URL}/threads/${threadId}/neutral-vote`,
+  //     {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${getAccessToken()}`,
+  //       },
+  //     },
+  //   );
+
+  //   const responseJson = await response.json();
+
+  //   const { status, message } = responseJson;
+
+  //   if (status !== "success") {
+  //     throw new Error(message);
+  //   }
+  //   const {
+  //     data: { vote },
+  //   } = responseJson;
+
+  //   return vote;
+  // }
+
+  async function voteComment(req: VoteCommentReq) {
+    const voteTypeUrl: Record<VoteType, string> = {
+      "0": `${BASE_URL}/threads/${req.threadId}/comments/${req.commentId}/neutral-vote`, //netral
+      "-1": `${BASE_URL}/threads/${req.threadId}/comments/${req.commentId}/down-vote`, //down-vote
+      "1": `${BASE_URL}/threads/${req.threadId}/comments/${req.commentId}/up-vote`, //up-vote
+    };
+
+    const response = await _fetchWithAuth(voteTypeUrl[req.voteType], {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getAccessToken()}`,
       },
-    );
+    });
 
     const responseJson = await response.json();
 
     const { status, message } = responseJson;
 
     if (status !== "success") {
+      errorNotify(message);
       throw new Error(message);
     }
+    successNotify("Comment is voted");
     const {
       data: { vote },
     } = responseJson;
@@ -270,7 +349,6 @@ export default (() => {
     return vote;
   }
 
-  // end votes
   // start comment
   async function upVoteComment(threadId: string, commentId: string) {
     const response = await _fetchWithAuth(
@@ -376,12 +454,14 @@ export default (() => {
     getOwnProfile,
     login,
     register,
+    voteThread,
     createComment,
-    upVote,
-    downVote,
-    neutralVote,
+    // upVote,
+    // downVote,
+    // neutralVote,
     downVoteComment,
     upVoteComment,
+    voteComment,
     netralVoteComment,
     getAllLeaderboards,
   };

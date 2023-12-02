@@ -7,15 +7,3 @@ export default function userReducer(users = [], action = {}) {
       return users;
   }
 }
-
-export function authUserReducer(authUser = null, action = {}) {
-  const { payload, type } = action;
-  switch (type) {
-    case ActionType.SET_AUTH_USER:
-      return payload.authUser;
-    case ActionType.UNSET_AUTH_USER:
-      return null;
-    default:
-      return authUser;
-  }
-}

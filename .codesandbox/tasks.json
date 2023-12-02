@@ -19,13 +19,15 @@
     },
     "build": {
       "name": "build",
-      "command": "yarn build",
-      "runAtStart": false
+      "command": "yarn build"
     },
     "preview": {
       "name": "preview",
-      "command": "yarn preview",
-      "runAtStart": false
+      "command": "yarn preview"
+    },
+    "npm install react-html-parser": {
+      "name": "isnta",
+      "command": "npm install react-html-parser"
     }
   }
 }

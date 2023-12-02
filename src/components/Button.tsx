@@ -1,4 +1,12 @@
-const Button = (props) => {
+import React from "react";
+
+interface ButtonProps {
+  onClick: () => void;
+  children: React.ReactNode;
+  text?: string;
+  type: "button" | "submit";
+}
+const Button: React.FC<ButtonProps> = (props) => {
   const { children, onClick, text = "button", type } = props;
   return (
     <button

@@ -15,13 +15,13 @@ export function receiveLoaderboardsActionCreator(leaderboards = []) {
 
 export function asyncReceiveLeaderboards() {
   return async (dispatch) => {
-    showLoading();
+    dispatch(showLoading());
     try {
       const leaderboards = await api.getAllLeaderboards();
       dispatch(receiveLoaderboardsActionCreator(leaderboards));
     } catch (err: any) {
       alert(err.message);
     }
-    hideLoading();
+    dispatch(hideLoading());
   };
 }
